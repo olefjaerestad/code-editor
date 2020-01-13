@@ -101,7 +101,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			<div className="editor__content">
 				<textarea
 				className="editor__content__writer" 
-				placeholder="Code here..." 
+				placeholder={`${language} here...`}
 				spellCheck="false" 
 				ref={textArea}
 				value={code}
