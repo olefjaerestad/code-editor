@@ -2,7 +2,7 @@ import React, { useState, SyntheticEvent, useRef } from 'react';
 import './Editor.css';
 
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
-const Editor: React.FC<{changeHandler?: Function}> = (props: any) => {
+const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const [language, setLanguage] = useState('js');
 	const languages = ['html', 'js', 'css'];
 	const textArea = useRef<HTMLTextAreaElement>(null);
@@ -49,7 +49,7 @@ const Editor: React.FC<{changeHandler?: Function}> = (props: any) => {
 		const latestCode = e.target.value;
 		setCode(latestCode);
 		prettifyCode(latestCode);
-		props.changeHandler(latestCode, language, e);
+		props.onChange(latestCode, language, e);
 	}
 
 	const keyDownHandler = (e: SyntheticEvent) => {
