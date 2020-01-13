@@ -25,12 +25,12 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				code: /(console|window|document)/gm,
 				classes: 'c--cyan',
 			},
+			// { // todo: using this will break html entities. must find a way to only color numbers outside of entities/strings. 
+			// 	code: /(\d)/gm,
+			// 	classes: 'c--green',
+			// },
 			{
-				code: /(\d)/gm,
-				classes: 'c--green',
-			},
-			{
-				code: /('.*')/gm, // todo: add support for double quotes without breaking stuff (try typing console afterwards and check)
+				code: /('.*'|&#34;.*&#34;)/gm,
 				classes: 'c--orange',
 			},
 			{
@@ -73,9 +73,11 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	}
 
 	const prettifyCode = (code: string) => {
+		// https://www.freeformatter.com/html-entities.html
 		let formattedCode: string = code
 			.replace(/</gm, '&lt;')
 			.replace(/>/gm, '&gt;')
+			.replace(/"/gm, '&#34;')
 			.replace(/\n/gm, '<br>')
 			.replace(/ {4}/gm, '&ensp;&ensp;&ensp;&ensp;');
 		// const wrapInSpan = (classes: string) => (match: any, offset: any, string: any) => `<span class="${classes}">${match}</span>`;
