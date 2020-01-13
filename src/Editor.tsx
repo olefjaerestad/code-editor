@@ -9,16 +9,40 @@ const Editor: React.FC<{changeHandler?: Function}> = (props: any) => {
 	const pre = useRef<HTMLDivElement>(null);
 	const [code, setCode] = useState('');
 	const [prettycode, setPrettyCode] = useState('');
-	const jsColorMappings = [
-		{
-			code: /(console|window|document)/gm,
-			classes: 'c--green',
-		},
-		{
-			code: /(log)/gm,
-			classes: 'c--purple',
-		},
-	];
+	const colorMappings = {
+		html: [
+			{
+				code: /<[^<]+>/gm,
+				classes: 'c--blue',
+			}
+		],
+		js: [
+			{
+				code: /(var|let|const|function|class|true)/gm,
+				classes: 'c--blue',
+			},
+			{
+				code: /(console|window|document)/gm,
+				classes: 'c--cyan',
+			},
+			{
+				code: /(\d)/gm,
+				classes: 'c--green',
+			},
+			{
+				code: /('.*')/gm, // todo: add support for double quotes without breaking stuff (try typing console afterwards and check)
+				classes: 'c--orange',
+			},
+			{
+				code: /(if)/gm,
+				classes: 'c--purple',
+			},
+			{
+				code: /(\.\w+\()/gm,
+				classes: 'c--yellow',
+			},
+		],
+	};
 
 	const changeHandler = (e: SyntheticEvent) => {
 		// @ts-ignore
@@ -28,35 +52,47 @@ const Editor: React.FC<{changeHandler?: Function}> = (props: any) => {
 		props.changeHandler(latestCode, language, e);
 	}
 
-	const keyUpHandler = (e: SyntheticEvent) => {
+	const keyDownHandler = (e: SyntheticEvent) => {
 		// @ts-ignore
 		const key = e.key;
+		const cursorPos = textArea.current?.selectionStart;
 
-		if (key === 'Enter') {
-			// todo: add line break to pretty code
-			const cursorPos = textArea.current?.selectionStart;
-			
-			console.log(cursorPos);
-			
-			if (cursorPos) {
-				// const latestCode = prettycode.substr(0, cursorPos) + '<br>' + prettycode.substr(cursorPos);
-				console.log('code:\n', code);
-				const latestCode = code.substr(0, cursorPos) + '<br>' + code.substr(cursorPos);
-				console.log('latestCode:\n', latestCode);
-				setPrettyCode(latestCode);
+		console.log(cursorPos);
+
+		if (key === 'Tab') {
+			e.preventDefault();
+			e.nativeEvent.preventDefault();
+
+			// todo: adjust cursor placement after pressing tab
+			if (cursorPos !== undefined) {
+				const latestCode = code.substr(0, cursorPos) + '    ' + code.substr(cursorPos);
+				setCode(latestCode);
+				prettifyCode(latestCode);
 			}
 		}
 	}
 
 	const prettifyCode = (code: string) => {
-		let formattedCode: string = code;
+		let formattedCode: string = code
+			.replace(/\n/gm, '<br>')
+			.replace(/ {4}/gm, '&ensp;&ensp;&ensp;&ensp;');
 		// const wrapInSpan = (classes: string) => (match: any, offset: any, string: any) => `<span class="${classes}">${match}</span>`;
+		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => ['<br>'].includes(match) ? match : `<span class="${classes}">${match.replace(/</gm, '&lt;').replace(/>/gm, '&gt;')}</span>`;
 
-		if ( language === 'js' ) {
-			// jsColorMappings.forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
-			jsColorMappings.forEach(mapping => formattedCode = formattedCode.replace(mapping.code, `<span class="${mapping.classes}">$&</span>`));
+		
+		// colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
+		// @ts-ignore
+		switch (language) {
+			case 'html':
+				// @ts-ignore
+				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes))); // todo: nested, unclosed tags cause formatting issues. must convert to htmlentities.
+				break;
+			default:
+				// @ts-ignore
+				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, `<span class="${mapping.classes}">$&</span>`));
+				break;
 		}
-		// console.log(formattedCode);
+
 		setPrettyCode(formattedCode);
 	}
 
@@ -67,9 +103,10 @@ const Editor: React.FC<{changeHandler?: Function}> = (props: any) => {
 				className="editor__content__writer" 
 				placeholder="Code here..." 
 				spellCheck="false" 
-				ref={textArea} 
+				ref={textArea}
+				value={code}
 				onChange={changeHandler}
-				onKeyUp={keyUpHandler}></textarea>
+				onKeyDown={keyDownHandler}></textarea>
 
 				<div
 				className="editor__content__pretty"
@@ -78,6 +115,7 @@ const Editor: React.FC<{changeHandler?: Function}> = (props: any) => {
 			</div>
 
 			<div className="editor__meta">
+				<span>{code.length} bytes/characters</span>
 				<select
 				value={language}
 				onChange={(e) => setLanguage(e.target.value)}>
