@@ -25,10 +25,11 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				code: /(console|window|document)/gm,
 				classes: 'c--cyan',
 			},
-			// { // todo: using this will break html entities. must find a way to only color numbers outside of entities/strings. 
-			// 	code: /(\d)/gm,
-			// 	classes: 'c--green',
-			// },
+			/* { // todo: using this will break html entities. must find a way to only color numbers outside of entities/strings. 
+				// code: /(\d)/gm,
+				code: /(\d+(?<!;))/gm,
+				classes: 'c--green',
+			}, */
 			{
 				code: /('.*'|&#34;.*&#34;)/gm,
 				classes: 'c--orange',
