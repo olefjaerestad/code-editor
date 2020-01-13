@@ -12,7 +12,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const colorMappings = {
 		html: [
 			{
-				code: /<[^<]+>/gm,
+				code: /&lt;[^&lt;]+&gt;/gm,
 				classes: 'c--blue',
 			}
 		],
@@ -74,10 +74,12 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 
 	const prettifyCode = (code: string) => {
 		let formattedCode: string = code
+			.replace(/</gm, '&lt;')
+			.replace(/>/gm, '&gt;')
 			.replace(/\n/gm, '<br>')
 			.replace(/ {4}/gm, '&ensp;&ensp;&ensp;&ensp;');
 		// const wrapInSpan = (classes: string) => (match: any, offset: any, string: any) => `<span class="${classes}">${match}</span>`;
-		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => ['<br>'].includes(match) ? match : `<span class="${classes}">${match.replace(/</gm, '&lt;').replace(/>/gm, '&gt;')}</span>`;
+		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => ['<br>'].includes(match) ? match : `<span class="${classes}">${match}</span>`;
 
 		
 		// colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
@@ -85,7 +87,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		switch (language) {
 			case 'html':
 				// @ts-ignore
-				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes))); // todo: nested, unclosed tags cause formatting issues. must convert to htmlentities.
+				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes)));
 				break;
 			default:
 				// @ts-ignore
