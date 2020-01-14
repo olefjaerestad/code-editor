@@ -54,7 +54,7 @@
 	resize: none;
 }
 .editor__content__pretty {
-	/* white-space: pre; */
+	white-space: pre;
 	/* background-color: var(--color-primary); */
 	width: 100%;
 	height: 100%;

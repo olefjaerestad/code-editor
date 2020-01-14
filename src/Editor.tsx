@@ -2,6 +2,7 @@ import React, { useState, SyntheticEvent, useRef } from 'react';
 import './Editor.css';
 
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
+// http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
 const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const [language, setLanguage] = useState('js');
 	const languages = ['html', 'js', 'css'];
@@ -26,7 +27,6 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				classes: 'c--cyan',
 			},
 			{
-				// code: /(?<!#)\d+(?!;)/gm, // note/todo: lookahead and lookbehind has super spotty browser support: https://caniuse.com/#feat=js-regexp-lookbehind
 				code: /#?(\d+)/gm, // # explained in wrapJsInSpan()
 				classes: 'c--green',
 			},
@@ -39,7 +39,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				classes: 'c--purple',
 			},
 			{
-				code: /(\.\w+\()/gm,
+				code: /(\w+\()/gm,
 				classes: 'c--yellow',
 			},
 		],
@@ -58,15 +58,16 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		const key = e.key;
 		const cursorPos = textArea.current?.selectionStart;
 
-		console.log(cursorPos);
-
 		if (key === 'Tab') {
 			e.preventDefault();
-			e.nativeEvent.preventDefault();
+			// e.nativeEvent.preventDefault();
 
-			// todo: adjust cursor placement after pressing tab
+			// adjust cursor placement after pressing tab. avoids cursor always moving to last pos.
 			if (cursorPos !== undefined) {
-				const latestCode = code.substr(0, cursorPos) + '    ' + code.substr(cursorPos);
+				// const latestCode = code.substr(0, cursorPos) + '    ' + code.substr(cursorPos);
+				const latestCode = code.substr(0, cursorPos) + '\t' + code.substr(cursorPos);
+				// @ts-ignore
+				setTimeout(() => {textArea.current.selectionStart = cursorPos+1; textArea.current.selectionEnd = cursorPos+1}, 1); // setTimeout required
 				setCode(latestCode);
 				prettifyCode(latestCode);
 			}
@@ -79,9 +80,8 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			.replace(/</gm, '&lt;')
 			.replace(/>/gm, '&gt;')
 			.replace(/"/gm, '&#34;')
-			.replace(/\n/gm, '<br>')
-			// .replace(/ {4}/gm, '&ensp;&ensp;&ensp;&ensp;');
-			.replace(/ /gm, '&ensp;');
+			.replace(/\n/gm, '<br>');
+			// .replace(/ /gm, '&ensp;');
 		// const wrapInSpan = (classes: string) => (match: any, offset: any, string: any) => `<span class="${classes}">${match}</span>`;
 		// const wrapJsInSpan = (classes: string) => (match: any, offset: any, string: any) => {
 		// 	console.log('match:', match);
