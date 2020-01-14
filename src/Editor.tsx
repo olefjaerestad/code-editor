@@ -26,7 +26,8 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				classes: 'c--cyan',
 			},
 			{
-				code: /(?<!#)\d+(?!;)/gm,
+				// code: /(?<!#)\d+(?!;)/gm, // note/todo: lookahead and lookbehind has super spotty browser support: https://caniuse.com/#feat=js-regexp-lookbehind
+				code: /#?(\d+)/gm, // # explained in wrapJsInSpan()
 				classes: 'c--green',
 			},
 			{
@@ -82,6 +83,17 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			// .replace(/ {4}/gm, '&ensp;&ensp;&ensp;&ensp;');
 			.replace(/ /gm, '&ensp;');
 		// const wrapInSpan = (classes: string) => (match: any, offset: any, string: any) => `<span class="${classes}">${match}</span>`;
+		// const wrapJsInSpan = (classes: string) => (match: any, offset: any, string: any) => {
+		// 	console.log('match:', match);
+		// 	return `<span class="${classes}">${match}</span>`;
+		// }
+		const wrapJsInSpan = (classes: string) => (match: string, group1: any, offset: any, string: any) => {
+			// avoid breaking htmlentities
+			if (Number(match.substr(1)) && match[0] === '#') {
+				return match;
+			}
+			return `<span class="${classes}">${match}</span>`;
+		}
 		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => ['<br>'].includes(match) ? match : `<span class="${classes}">${match}</span>`;
 
 		
@@ -94,7 +106,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				break;
 			default:
 				// @ts-ignore
-				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, `<span class="${mapping.classes}">$&</span>`));
+				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapJsInSpan(mapping.classes)));
 				break;
 		}
 
