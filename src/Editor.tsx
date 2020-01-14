@@ -4,16 +4,20 @@ import './Editor.css';
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
 // http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
 const Editor: React.FC<{onChange?: Function}> = (props: any) => {
-	const [language, setLanguage] = useState('js');
+	const [language, setLanguage] = useState('html');
 	const languages = ['html', 'js', 'css'];
 	const textArea = useRef<HTMLTextAreaElement>(null);
 	const pre = useRef<HTMLDivElement>(null);
+	const testLetter = useRef<HTMLSpanElement>(null);
 	const [code, setCode] = useState('');
 	const [prettycode, setPrettyCode] = useState('');
+	const [rowHeights, setRowHeights] = useState<number[]>([18]);
 	const colorMappings = {
 		html: [
 			{
-				code: /&lt;[^&lt;]+&gt;/gm,
+				code: /&lt;[^&lt;]+&gt;/gm, // todo: this doesnt work with <div class="">, <table>, <style>, <script> or any tag containing 'l' or 't'
+				// code: /&lt;[^&;]+&gt;/gm,
+				// code: /&lt;[^&\b]+&gt;/gm,
 				classes: 'c--blue',
 			}
 		],
@@ -60,7 +64,6 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 
 		if (key === 'Tab') {
 			e.preventDefault();
-			// e.nativeEvent.preventDefault();
 
 			// adjust cursor placement after pressing tab. avoids cursor always moving to last pos.
 			if (cursorPos !== undefined) {
@@ -82,11 +85,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			.replace(/"/gm, '&#34;')
 			.replace(/\n/gm, '<br>');
 			// .replace(/ /gm, '&ensp;');
-		// const wrapInSpan = (classes: string) => (match: any, offset: any, string: any) => `<span class="${classes}">${match}</span>`;
-		// const wrapJsInSpan = (classes: string) => (match: any, offset: any, string: any) => {
-		// 	console.log('match:', match);
-		// 	return `<span class="${classes}">${match}</span>`;
-		// }
+		// console.log('formattedCode:\n', formattedCode);
 		const wrapJsInSpan = (classes: string) => (match: string, group1: any, offset: any, string: any) => {
 			// avoid breaking htmlentities
 			if (Number(match.substr(1)) && match[0] === '#') {
@@ -94,7 +93,10 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			}
 			return `<span class="${classes}">${match}</span>`;
 		}
-		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => ['<br>'].includes(match) ? match : `<span class="${classes}">${match}</span>`;
+		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => {
+			// console.log('match:', match);
+			return ['<br>'].includes(match) ? match : `<span class="${classes}">${match}</span>`;
+		}
 
 		
 		// colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
@@ -113,25 +115,58 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		setPrettyCode(formattedCode);
 	}
 
+	const keyUpHandler = () => {
+		setRowHeights(getRowHeights());
+	}
+
+	const getRowHeights = () => {
+		let rows: number[] = [];
+		const latestCode = textArea.current?.value;
+		// const cursorPos = textArea.current?.selectionStart;
+		const currentRows = (latestCode || '').split('\n');
+		// @ts-ignore
+		// const fontSize = parseInt(getComputedStyle(textArea.current).getPropertyValue('--font-size'));
+		const textAreaWidth = (textArea.current?.getBoundingClientRect().width || 0) - 20; // -20 for padding
+		const letterWidth = (testLetter.current?.getBoundingClientRect().width || 0);
+		const letterHeight = (testLetter.current?.getBoundingClientRect().height || 0);
+		const lettersPrLine = Math.floor(textAreaWidth/letterWidth);
+
+		for ( var i = 0; i < currentRows.length; ++i ) {
+			var letters = currentRows[i];
+			const height = Math.max(Math.ceil(letters.length/lettersPrLine), 1) * letterHeight;
+			rows.push(height);
+		}
+
+		return rows;
+	}
+
 	return (
 		<div className="editor">
 			<div className="editor__content">
-				<textarea
-				className="editor__content__writer" 
-				placeholder={`${language} here...`}
-				spellCheck="false" 
-				ref={textArea}
-				value={code}
-				onChange={changeHandler}
-				onKeyDown={keyDownHandler}></textarea>
+				<div className="editor__content__rows">
+					{rowHeights.map((height: number, i: number) => <div style={{height: `${height}px`}}>{i}</div>)}
+				</div>
+				<div className="editor__content__main">
+					<textarea
+					className="editor__content__main__writer" 
+					placeholder={`${language} here...`}
+					spellCheck="false" 
+					ref={textArea}
+					value={code}
+					onChange={changeHandler}
+					onKeyDown={keyDownHandler}
+					onKeyUp={keyUpHandler}></textarea>
 
-				<div
-				className="editor__content__pretty"
-				ref={pre}
-				dangerouslySetInnerHTML={{__html: prettycode}}></div>
+					<div
+					className="editor__content__main__pretty"
+					ref={pre}
+					dangerouslySetInnerHTML={{__html: prettycode}}></div>
+				</div>
+				<span ref={testLetter} className="editor__content__testletter">i</span>
 			</div>
 
 			<div className="editor__meta">
+				<span>{(textArea.current?.value.match(/\n/gm) || []).length + 1} lines</span>
 				<span>{code.length} bytes/characters</span>
 				<select
 				value={language}
