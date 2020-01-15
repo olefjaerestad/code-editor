@@ -6,6 +6,7 @@ import './Editor.css';
 const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const [language, setLanguage] = useState('html');
 	const languages = ['html', 'js', 'css'];
+	const indentSize = 4;
 	const textArea = useRef<HTMLTextAreaElement>(null);
 	const pre = useRef<HTMLDivElement>(null);
 	const testLetter = useRef<HTMLSpanElement>(null);
@@ -69,14 +70,28 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 
 			// adjust cursor placement after pressing tab. avoids cursor always moving to last pos.
 			if (cursorPos !== undefined) {
-				// const latestCode = code.substr(0, cursorPos) + '    ' + code.substr(cursorPos);
-				const latestCode = code.substr(0, cursorPos) + '\t' + code.substr(cursorPos);
+				const indent = Array(indentSize).fill(' ').join('');
+				const latestCode = code.substr(0, cursorPos) + indent + code.substr(cursorPos);
+				// const latestCode = code.substr(0, cursorPos) + '\t' + code.substr(cursorPos);
 				// @ts-ignore
-				setTimeout(() => {textArea.current.selectionStart = cursorPos+1; textArea.current.selectionEnd = cursorPos+1}, 1); // setTimeout required
+				setTimeout(() => {textArea.current.selectionStart = cursorPos+indentSize; textArea.current.selectionEnd = cursorPos+indentSize}, 1); // setTimeout required
 				setCode(latestCode);
 				prettifyCode(latestCode);
 			}
 		}
+	}
+
+	const keyUpHandler = (e: SyntheticEvent) => {
+		// @ts-ignore
+		const key = e.key;
+		
+		if (key === 'Enter') autoIndent();
+
+		setTimeout(() => {
+			setRowHeights(getRowHeights());
+			setCurrentRow(getCurrentRow());
+			setCurrentCol(getCurrentCol());
+		}, 1); // setTimeout required
 	}
 
 	const prettifyCode = (code: string, lang?: string) => {
@@ -118,12 +133,6 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		setPrettyCode(formattedCode);
 	}
 
-	const keyUpHandler = () => {
-		setRowHeights(getRowHeights());
-		setCurrentRow(getCurrentRow());
-		setCurrentCol(getCurrentCol());
-	}
-
 	const getRowHeights = (): number[] => {
 		let rows: number[] = [];
 		const latestCode = textArea.current?.value;
@@ -158,6 +167,33 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		const lastLineBreakIndex = latestCode?.substr(0, cursorPos).lastIndexOf('\n');
 		const theCurrentCol = (cursorPos||0) - (lastLineBreakIndex||0);
 		return theCurrentCol;
+	}
+
+	const autoIndent = (): void => {
+		const cursorPos = textArea.current?.selectionStart;
+
+		if (cursorPos !== undefined) {
+			const codeInCurrentRow = code.split('\n')[currentRow-1];
+			const characterToLeft = code[cursorPos-2];
+			const characterToRight = code[cursorPos];
+			const indent = Array(indentSize).fill(' ').join('');
+			let indentsToAdd = codeInCurrentRow.split(indent).length - 1;
+			let addNewLine = false;
+			if ( ['{'].indexOf(characterToLeft) !== -1 ) {
+				++indentsToAdd;
+
+				if ( ['}'].indexOf(characterToRight) !== -1 ) {
+					addNewLine = true;
+				}
+			}
+			const indents = Array(indentsToAdd).fill(indent).join('');
+			const latestCode = code.substr(0, cursorPos) + indents + (addNewLine ? '\n' : '') + code.substr(cursorPos);
+			
+			// @ts-ignore
+			setTimeout(() => {textArea.current.selectionStart = cursorPos+indents.length; textArea.current.selectionEnd = cursorPos+indents.length}, 1); // setTimeout required
+			setCode(latestCode);
+			prettifyCode(latestCode);
+		}
 	}
 
 	return (
