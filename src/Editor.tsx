@@ -4,18 +4,20 @@ import './Editor.css';
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
 // http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
 const Editor: React.FC<{onChange?: Function}> = (props: any) => {
-	const [language, setLanguage] = useState('html');
+	const [language, setLanguage] = useState('js');
 	const languages = ['html', 'js', 'css'];
 	const indentSize = 4;
 	const textArea = useRef<HTMLTextAreaElement>(null);
-	const pre = useRef<HTMLDivElement>(null);
+	const prettycodeEl = useRef<HTMLPreElement>(null);
+	const rowsEl = useRef<HTMLDivElement>(null);
 	const testLetter = useRef<HTMLSpanElement>(null);
+	const animationId = useRef<number>(0);
 	const [code, setCode] = useState('');
 	const [prettycode, setPrettyCode] = useState('');
 	const [rowHeights, setRowHeights] = useState<number[]>([18]);
 	const [currentRow, setCurrentRow] = useState(1);
 	const [currentCol, setCurrentCol] = useState(1);
-	const colorMappings = {
+	const classMappings = {
 		html: [
 			{
 				code: /&lt;[^&lt;]+&gt;/gm, // todo: this doesnt work with <div class="">, <table>, <style>, <script> or any tag containing 'l' or 't'
@@ -26,11 +28,11 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		],
 		js: [
 			{
-				code: /(var|let|const|function|class|true)/gm,
+				code: /(var|let|const|function|=&gt;|class|new|true)/gm,
 				classes: 'c--blue',
 			},
 			{
-				code: /(console|window|document)/gm,
+				code: /(console|window|document|Math)/gm,
 				classes: 'c--cyan',
 			},
 			{
@@ -38,16 +40,20 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				classes: 'c--green',
 			},
 			{
-				code: /('.*'|&#34;.*&#34;)/gm,
+				code: /('.*'|`.*`|&#34;.*&#34;)/gm,
 				classes: 'c--orange',
 			},
 			{
-				code: /(if)/gm,
+				code: /(if|else|return|\.{3})/gm,
 				classes: 'c--purple',
 			},
 			{
 				code: /(\w+\()/gm,
 				classes: 'c--yellow',
+			},
+			{
+				code: /({|})/gm,
+				classes: 'c--white',
 			},
 		],
 	};
@@ -64,6 +70,9 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		// @ts-ignore
 		const key = e.key;
 		const cursorPos = textArea.current?.selectionStart;
+
+		cancelAnimationFrame(animationId.current);
+		animationId.current = requestAnimationFrame(scrollElements);
 
 		if (key === 'Tab') {
 			e.preventDefault();
@@ -84,14 +93,21 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const keyUpHandler = (e: SyntheticEvent) => {
 		// @ts-ignore
 		const key = e.key;
+
+		cancelAnimationFrame(animationId.current);
+		animationId.current = requestAnimationFrame(scrollElements);
 		
 		if (key === 'Enter') autoIndent();
-
 		setTimeout(() => {
 			setRowHeights(getRowHeights());
 			setCurrentRow(getCurrentRow());
 			setCurrentCol(getCurrentCol());
 		}, 1); // setTimeout required
+	}
+
+	const scrollHandler = (e: SyntheticEvent) => {
+		cancelAnimationFrame(animationId.current);
+		animationId.current = requestAnimationFrame(scrollElements);
 	}
 
 	const prettifyCode = (code: string, lang?: string) => {
@@ -117,16 +133,16 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		}
 
 		
-		// colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
+		// classMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
 		// @ts-ignore
 		switch (lang) {
 			case 'html':
 				// @ts-ignore
-				if (colorMappings[lang]) colorMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes)));
+				if (classMappings[lang]) classMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes)));
 				break;
 			default:
 				// @ts-ignore
-				if (colorMappings[lang]) colorMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapJsInSpan(mapping.classes)));
+				if (classMappings[lang]) classMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapJsInSpan(mapping.classes)));
 				break;
 		}
 
@@ -196,11 +212,19 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		}
 	}
 
+	const scrollElements = (): void => {
+		const scrollTop = textArea.current?.scrollTop;
+		// @ts-ignore
+		prettycodeEl.current.style.transform = rowsEl.current.style.transform = `translate3d(0, -${scrollTop}px, 0)`;
+	}
+
 	return (
 		<div className="editor">
 			<div className="editor__content">
 				<div className="editor__content__rows">
-					{rowHeights.map((height: number, i: number) => <div key={i} style={{height: `${height}px`}}>{i}</div>)}
+					<div className="editor__content__rows__inner" ref={rowsEl}>
+						{rowHeights.map((height: number, i: number) => <div key={i} style={{height: `${height}px`}}>{i+1}</div>)}
+					</div>
 				</div>
 				<div className="editor__content__main">
 					<textarea
@@ -211,12 +235,14 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 					value={code}
 					onChange={changeHandler}
 					onKeyDown={keyDownHandler}
-					onKeyUp={keyUpHandler}></textarea>
+					onKeyUp={keyUpHandler}
+					onMouseUp={keyUpHandler}
+					onScroll={scrollHandler}></textarea>
 
-					<div
+					<pre
 					className="editor__content__main__pretty"
-					ref={pre}
-					dangerouslySetInnerHTML={{__html: prettycode}}></div>
+					ref={prettycodeEl}
+					dangerouslySetInnerHTML={{__html: prettycode}}></pre>
 				</div>
 				<span ref={testLetter} className="editor__content__testletter">i</span>
 			</div>

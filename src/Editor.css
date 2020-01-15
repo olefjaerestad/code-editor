@@ -1,24 +1,29 @@
 .editor {
 	--font-size: 16px;
-	--color-blue: hsl(221, 93%, 71%);
+	--color-lightblue: hsl(208, 100%, 87%);
+	--color-blue: hsl(221, 100%, 67%);
 	--color-darkblue: hsl(216, 74%, 53%);
 	--color-cyan: hsl(177, 56%, 54%);
 	--color-green: hsl(140, 100%, 83%);
 	--color-orange: hsl(24, 77%, 66%);
-	--color-purple: hsl(260, 100%, 80%);
-	--color-yellow: hsl(64, 100%, 80%);
-	--color-white: #fff;
+	--color-purple: hsl(271, 100%, 76%);
+	--color-yellow: hsl(64, 81%, 79%);
+	--color-white: hsl(0, 0%, 100%);
+	--color-white-transparent: hsla(0, 0%, 100%, .5);
 	--color-background: hsl(228, 9%, 11%);
+	--height: 50vh;
+	--metaHeight: 30px;
 
 	font-size: var(--font-size);
 	color: var(--color-white);
 	background-color: var(--color-background);
-	height: 50vh;
+	height: var(--height);
 	display: flex;
 	flex-direction: column;
 }
 .editor,
 .editor * {
+	outline-color: var(--color-darkblue);
 	box-sizing: border-box;
 }
 .editor__content {
@@ -30,7 +35,7 @@
 	font-family: sans-serif;
 	font-size: 13px;
 	background-color: var(--color-darkblue);
-	height: 30px;
+	height: var(--metaHeight);
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
@@ -40,12 +45,15 @@
 }
 .editor__content__rows {
 	text-align: right;
+	max-height: calc(var(--height) - var(--metaHeight));
 	border-right: 1px solid var(--color-darkblue);
+	overflow: hidden;
 	opacity: .5;
 }
 .editor__content__main {
 	flex: 1;
 	position: relative;
+	overflow: hidden;
 }
 .editor__content__main__writer,
 .editor__content__main__pretty,
@@ -65,13 +73,18 @@
 }
 .editor__content__main__writer {
 	color: inherit;
+	/* -webkit-text-fill-color: transparent; */ /* todo: comment in when done testing */
 	background-color: inherit;
 	width: 100%;
 	height: 100%;
 	resize: none;
 }
+.editor__content__main__writer::-webkit-input-placeholder {
+	-webkit-text-fill-color: var(--color-white-transparent);
+}
 .editor__content__main__pretty {
 	white-space: pre;
+	color: var(--color-lightblue);
 	/* background-color: var(--color-primary); */
 	width: 100%;
 	height: 100%;
@@ -106,6 +119,9 @@
 }
 .editor .c--purple {
 	color: var(--color-purple);
+}
+.editor .c--white {
+	color: var(--color-white);
 }
 .editor .c--yellow {
 	color: var(--color-yellow);
