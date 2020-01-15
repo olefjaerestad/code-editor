@@ -12,6 +12,8 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const [code, setCode] = useState('');
 	const [prettycode, setPrettyCode] = useState('');
 	const [rowHeights, setRowHeights] = useState<number[]>([18]);
+	const [currentRow, setCurrentRow] = useState(1);
+	const [currentCol, setCurrentCol] = useState(1);
 	const colorMappings = {
 		html: [
 			{
@@ -77,13 +79,14 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		}
 	}
 
-	const prettifyCode = (code: string) => {
+	const prettifyCode = (code: string, lang?: string) => {
+		lang = lang || language;
 		// https://www.freeformatter.com/html-entities.html
 		let formattedCode: string = code
 			.replace(/</gm, '&lt;')
 			.replace(/>/gm, '&gt;')
-			.replace(/"/gm, '&#34;')
-			.replace(/\n/gm, '<br>');
+			.replace(/"/gm, '&#34;');
+			// .replace(/\n/gm, '<br>');
 			// .replace(/ /gm, '&ensp;');
 		// console.log('formattedCode:\n', formattedCode);
 		const wrapJsInSpan = (classes: string) => (match: string, group1: any, offset: any, string: any) => {
@@ -93,7 +96,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			}
 			return `<span class="${classes}">${match}</span>`;
 		}
-		const wrapHtmlNodeInSpan = (classes: string) => (match: any, offset: any, string: any) => {
+		const wrapHtmlNodeInSpan = (classes: string) => (match: any, group1: any, offset: any, string: any) => {
 			// console.log('match:', match);
 			return ['<br>'].includes(match) ? match : `<span class="${classes}">${match}</span>`;
 		}
@@ -101,14 +104,14 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		
 		// colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
 		// @ts-ignore
-		switch (language) {
+		switch (lang) {
 			case 'html':
 				// @ts-ignore
-				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes)));
+				if (colorMappings[lang]) colorMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapHtmlNodeInSpan(mapping.classes)));
 				break;
 			default:
 				// @ts-ignore
-				if (colorMappings[language]) colorMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapJsInSpan(mapping.classes)));
+				if (colorMappings[lang]) colorMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapJsInSpan(mapping.classes)));
 				break;
 		}
 
@@ -117,9 +120,11 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 
 	const keyUpHandler = () => {
 		setRowHeights(getRowHeights());
+		setCurrentRow(getCurrentRow());
+		setCurrentCol(getCurrentCol());
 	}
 
-	const getRowHeights = () => {
+	const getRowHeights = (): number[] => {
 		let rows: number[] = [];
 		const latestCode = textArea.current?.value;
 		// const cursorPos = textArea.current?.selectionStart;
@@ -140,11 +145,26 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 		return rows;
 	}
 
+	const getCurrentRow = (): number => {
+		const latestCode = textArea.current?.value;
+		const cursorPos = textArea.current?.selectionStart;
+		const theCurrentRow = latestCode?.substr(0, cursorPos).split('\n').length || 1;
+		return theCurrentRow;
+	}
+
+	const getCurrentCol = (): number => {
+		const latestCode = textArea.current?.value;
+		const cursorPos = textArea.current?.selectionStart;
+		const lastLineBreakIndex = latestCode?.substr(0, cursorPos).lastIndexOf('\n');
+		const theCurrentCol = (cursorPos||0) - (lastLineBreakIndex||0);
+		return theCurrentCol;
+	}
+
 	return (
 		<div className="editor">
 			<div className="editor__content">
 				<div className="editor__content__rows">
-					{rowHeights.map((height: number, i: number) => <div style={{height: `${height}px`}}>{i}</div>)}
+					{rowHeights.map((height: number, i: number) => <div key={i} style={{height: `${height}px`}}>{i}</div>)}
 				</div>
 				<div className="editor__content__main">
 					<textarea
@@ -166,11 +186,13 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			</div>
 
 			<div className="editor__meta">
-				<span>{(textArea.current?.value.match(/\n/gm) || []).length + 1} lines</span>
-				<span>{code.length} bytes/characters</span>
+				<span>Row: {currentRow}</span>
+				<span>Col: {currentCol}</span>
+				{/* <span>{rowHeights.length} rows</span> */}
+				<span>Bytes/characters: {code.length}</span>
 				<select
 				value={language}
-				onChange={(e) => setLanguage(e.target.value)}>
+				onChange={(e) => {setLanguage(e.target.value); prettifyCode(textArea.current?.value || '', e.target.value);}}>
 					{languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
 				</select>
 			</div>
