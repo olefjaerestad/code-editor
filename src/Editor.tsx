@@ -4,7 +4,6 @@ import './Editor.css';
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
 // http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
 // todo: ask for confirmation before closing app.
-// todo: fix issue with long lines. code and prettycode doesn't align on long text lines that go over multiple lines.
 const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 	const [language, setLanguage] = useState('js');
 	const languages = ['html', 'js', 'css'];

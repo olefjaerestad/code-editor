@@ -83,7 +83,9 @@
 	-webkit-text-fill-color: var(--color-white-transparent);
 }
 .editor__content__main__pretty {
-	white-space: pre;
+	/* white-space: pre; */
+	white-space: pre-wrap;
+    word-break: break-word;
 	color: var(--color-lightblue);
 	/* background-color: var(--color-primary); */
 	width: 100%;
