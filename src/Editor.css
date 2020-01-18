@@ -5,7 +5,8 @@
 	--color-darkblue: hsl(216, 74%, 53%);
 	--color-cyan: hsl(177, 56%, 54%);
 	--color-green: hsl(140, 100%, 83%);
-	--color-orange: hsl(24, 77%, 66%);
+	--color-lightorange: hsl(49, 78%, 65%);
+	--color-orange: hsl(24, 77%, 60%);
 	--color-purple: hsl(271, 100%, 76%);
 	--color-yellow: hsl(64, 81%, 79%);
 	--color-white: hsl(0, 0%, 100%);
@@ -115,6 +116,9 @@
 }
 .editor .c--green {
 	color: var(--color-green);
+}
+.editor .c--lightorange {
+	color: var(--color-lightorange);
 }
 .editor .c--orange {
 	color: var(--color-orange);

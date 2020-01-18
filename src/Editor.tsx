@@ -1,30 +1,43 @@
-import React, { useState, SyntheticEvent, useRef } from 'react';
+import React, { useState, SyntheticEvent, useRef, useEffect } from 'react';
 import './Editor.css';
 
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
 // http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
-// todo: ask for confirmation before closing app.
-const Editor: React.FC<{onChange?: Function}> = (props: any) => {
-	const [language, setLanguage] = useState('js');
+// todo: ask for confirmation before closing app? no. do it in the full code playground app instead.
+const Editor: React.FC<{onChange?: Function, language?: string, useLanguageSwitcher?: boolean, value?: string}> = (props: any) => {
+	// settings.
 	const languages = ['html', 'js', 'css'];
+	const useLanguageSwitcher = props.useLanguageSwitcher !== undefined ? props.useLanguageSwitcher : true;
 	const indentSize = 4;
+
+	// state.
+	const [language, setLanguage] = useState(props.language && languages.includes(props.language) ? props.language : 'html');
+	const [code, setCode] = useState(props.value ? JSON.parse(props.value) : '');
+	const [prettycode, setPrettyCode] = useState('');
+	const [rowHeights, setRowHeights] = useState<number[]>([18]);
+	const [currentRow, setCurrentRow] = useState(1);
+	const [currentCol, setCurrentCol] = useState(1);
+
+	// refs.
 	const textArea = useRef<HTMLTextAreaElement>(null);
 	const prettycodeEl = useRef<HTMLPreElement>(null);
 	const rowsEl = useRef<HTMLDivElement>(null);
 	const testLetter = useRef<HTMLSpanElement>(null);
 	const animationId = useRef<number>(0);
-	const [code, setCode] = useState('');
-	const [prettycode, setPrettyCode] = useState('');
-	const [rowHeights, setRowHeights] = useState<number[]>([18]);
-	const [currentRow, setCurrentRow] = useState(1);
-	const [currentCol, setCurrentCol] = useState(1);
+
+	// use regex to map code to css classes, for color highlighting.
 	const classMappings = {
 		html: [
 			{
-				code: /&lt;[^&lt;]+&gt;/gm, // todo: this doesnt work with <div class="">, <table>, <style>, <script> or any tag containing 'l' or 't'
+				// code: /&lt;[^&lt;]+&gt;/gm, // todo: this doesnt work with <div class="">, <table>, <style>, <script> or any tag containing 'l' or 't'
 				// code: /&lt;[^&;]+&gt;/gm,
 				// code: /&lt;[^&\b]+&gt;/gm,
+				code: /(&lt;[^&; ]*|&gt;)/gm,
 				classes: 'c--blue',
+			},
+			{
+				code: /('.*'|&#34;.*&#34;)/gm,
+				classes: 'c--orange',
 			}
 		],
 		js: [
@@ -37,7 +50,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				classes: 'c--cyan',
 			},
 			{
-				code: /#?(\d+)/gm, // # explained in wrapJsInSpan()
+				code: /#?(\d+)/gm, // # explained in wrapInSpan()
 				classes: 'c--green',
 			},
 			{
@@ -57,7 +70,31 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				classes: 'c--white',
 			},
 		],
+		css: [
+			{
+				code: /((.|\n)*{|})/gm,
+				classes: 'c--lightorange',
+			},
+			{
+				code: /(:.*;)/gm,
+				classes: 'c--orange',
+			},
+			{
+				code: /[^#](\d+)[^; <]*/gm, // # explained in wrapInSpan()
+				classes: 'c--green',
+			},
+			{
+				code: /({|}|:|;)/gm,
+				classes: 'c--white',
+			},
+		],
 	};
+
+	// makes sure code passed in props.value gets prettified.
+	useEffect(() => {
+		prettifyCode(code);
+		setRowHeights(getRowHeights());
+	}, []);
 
 	const changeHandler = (e: SyntheticEvent) => {
 		// @ts-ignore
@@ -120,8 +157,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			.replace(/"/gm, '&#34;');
 			// .replace(/\n/gm, '<br>');
 			// .replace(/ /gm, '&ensp;');
-		// console.log('formattedCode:\n', formattedCode);
-		const wrapJsInSpan = (classes: string) => (match: string, group1: any, offset: any, string: any) => {
+		const wrapInSpan = (classes: string) => (match: string, group1: any, offset: any, string: any) => {
 			// avoid breaking htmlentities
 			if (Number(match.substr(1)) && match[0] === '#') {
 				return match;
@@ -129,11 +165,9 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 			return `<span class="${classes}">${match}</span>`;
 		}
 		const wrapHtmlNodeInSpan = (classes: string) => (match: any, group1: any, offset: any, string: any) => {
-			// console.log('match:', match);
 			return ['<br>'].includes(match) ? match : `<span class="${classes}">${match}</span>`;
 		}
 
-		
 		// classMappings[language].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
 		// @ts-ignore
 		switch (lang) {
@@ -143,7 +177,7 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				break;
 			default:
 				// @ts-ignore
-				if (classMappings[lang]) classMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapJsInSpan(mapping.classes)));
+				if (classMappings[lang]) classMappings[lang].forEach(mapping => formattedCode = formattedCode.replace(mapping.code, wrapInSpan(mapping.classes)));
 				break;
 		}
 
@@ -253,11 +287,11 @@ const Editor: React.FC<{onChange?: Function}> = (props: any) => {
 				<span>Col: {currentCol}</span>
 				{/* <span>{rowHeights.length} rows</span> */}
 				<span>Bytes/characters: {code.length}</span>
-				<select
+				{useLanguageSwitcher && <select
 				value={language}
 				onChange={(e) => {setLanguage(e.target.value); prettifyCode(textArea.current?.value || '', e.target.value);}}>
 					{languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-				</select>
+				</select>}
 			</div>
 		</div>
 	);

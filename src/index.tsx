@@ -5,6 +5,7 @@ import Editor from './Editor';
 import * as serviceWorker from './serviceWorker';
 
 const test = (code: string, language: string, e: SyntheticEvent) => {
+	// localStorage.setItem( 'code', JSON.stringify(code) );
 	// @ts-ignore
 	if (document.getElementById('output')) document.body.removeChild(document.getElementById('output'));
 	const iframe = document.createElement('iframe');
@@ -33,7 +34,8 @@ const test = (code: string, language: string, e: SyntheticEvent) => {
 	iframeDocument.close();
 }
 
-ReactDOM.render(<Editor onChange={test} />, document.getElementById('root'));
+// @ts-ignore
+ReactDOM.render(<Editor onChange={test} language="js" useLanguageSwitcher={false} value={localStorage.getItem('code')} />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
