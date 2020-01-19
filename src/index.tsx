@@ -1,10 +1,10 @@
 import React, { SyntheticEvent } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import Editor from './Editor';
+import CodeEditor from './CodeEditor';
 import * as serviceWorker from './serviceWorker';
 
-const test = (code: string, language: string, e: SyntheticEvent) => {
+const test = (code: string, language: string, e: SyntheticEvent|undefined) => {
 	// localStorage.setItem( 'code', JSON.stringify(code) );
 	// @ts-ignore
 	if (document.getElementById('output')) document.body.removeChild(document.getElementById('output'));
@@ -35,7 +35,7 @@ const test = (code: string, language: string, e: SyntheticEvent) => {
 }
 
 // @ts-ignore
-ReactDOM.render(<Editor onChange={test} language="js" useLanguageSwitcher={false} value={localStorage.getItem('code')} />, document.getElementById('root'));
+ReactDOM.render(<CodeEditor onChange={test} language="html" useLanguageSwitcher={false} value={localStorage.getItem('code')} />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

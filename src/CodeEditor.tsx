@@ -1,10 +1,10 @@
 import React, { useState, SyntheticEvent, useRef, useEffect } from 'react';
-import './Editor.css';
+import './CodeEditor.css';
 
 // https://stackoverflow.com/questions/7745867/how-do-you-get-the-cursor-position-in-a-textarea
 // http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
 // todo: ask for confirmation before closing app? no. do it in the full code playground app instead.
-const Editor: React.FC<{onChange?: Function, language?: string, useLanguageSwitcher?: boolean, value?: string}> = (props: any) => {
+const CodeEditor: React.FC<{onChange?: Function, language?: string, useLanguageSwitcher?: boolean, value?: string}> = (props: any) => {
 	// settings.
 	const languages = ['html', 'js', 'css'];
 	const useLanguageSwitcher = props.useLanguageSwitcher !== undefined ? props.useLanguageSwitcher : true;
@@ -94,6 +94,13 @@ const Editor: React.FC<{onChange?: Function, language?: string, useLanguageSwitc
 	useEffect(() => {
 		prettifyCode(code);
 		setRowHeights(getRowHeights());
+	}, []);
+
+	// makes sure code passed in props.value gets passed to props.onChange on component init.
+	useEffect(() => {
+		if (code) {
+			props.onChange(code, language, undefined);
+		}
 	}, []);
 
 	const changeHandler = (e: SyntheticEvent) => {
@@ -229,16 +236,18 @@ const Editor: React.FC<{onChange?: Function, language?: string, useLanguageSwitc
 			const characterToRight = code[cursorPos];
 			const indent = Array(indentSize).fill(' ').join('');
 			let indentsToAdd = codeInCurrentRow.split(indent).length - 1;
+			const indentsToAddOnNewLine = indentsToAdd;
 			let addNewLine = false;
-			if ( ['{'].indexOf(characterToLeft) !== -1 ) {
+			if ( ['{'].includes(characterToLeft) ) {
 				++indentsToAdd;
 
-				if ( ['}'].indexOf(characterToRight) !== -1 ) {
+				if ( ['}'].includes(characterToRight) ) {
 					addNewLine = true;
 				}
 			}
 			const indents = Array(indentsToAdd).fill(indent).join('');
-			const latestCode = code.substr(0, cursorPos) + indents + (addNewLine ? '\n' : '') + code.substr(cursorPos);
+			const indentsOnNewLine = Array(indentsToAddOnNewLine).fill(indent).join('');
+			const latestCode = code.substr(0, cursorPos) + indents + (addNewLine ? `\n${indentsOnNewLine}` : '') + code.substr(cursorPos);
 			
 			// @ts-ignore
 			setTimeout(() => {textArea.current.selectionStart = cursorPos+indents.length; textArea.current.selectionEnd = cursorPos+indents.length}, 1); // setTimeout required
@@ -286,7 +295,7 @@ const Editor: React.FC<{onChange?: Function, language?: string, useLanguageSwitc
 				<span>Row: {currentRow}</span>
 				<span>Col: {currentCol}</span>
 				{/* <span>{rowHeights.length} rows</span> */}
-				<span>Bytes/characters: {code.length}</span>
+				<span>Characters: {code.length}</span>
 				{useLanguageSwitcher && <select
 				value={language}
 				onChange={(e) => {setLanguage(e.target.value); prettifyCode(textArea.current?.value || '', e.target.value);}}>
@@ -297,4 +306,4 @@ const Editor: React.FC<{onChange?: Function, language?: string, useLanguageSwitc
 	);
 }
 
-export default Editor;
+export default CodeEditor;
