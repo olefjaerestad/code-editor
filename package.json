@@ -11,6 +11,8 @@
       "last 1 safari version"
     ]
   },
+  "bugs": "https://github.com/olefjaerestad/code-editor/issues",
+  "description": "Code editor built with React.",
   "devDependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.4.0",
@@ -27,8 +29,26 @@
   "eslintConfig": {
     "extends": "react-app"
   },
+  "files": [
+    "src/CodeEditor.tsx",
+    "src/CodeEditor.test.tsx",
+    "src/CodeEditor.css",
+    "src/index.tsx",
+    "*.md"
+  ],
+  "homepage": "https://github.com/olefjaerestad/code-editor.git",
+  "keywords": [
+    "react",
+    "code editor",
+    "js editor",
+    "javascript editor",
+    "html editor",
+    "css editor",
+    "editor"
+  ],
   "license": "MIT",
   "name": "@olefjaerestad/code-editor",
+  "main": "src/CodeEditor.tsx",
   "repository": {
     "type": "git",
     "url": "https://github.com/olefjaerestad/code-editor.git"
