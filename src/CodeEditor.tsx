@@ -38,7 +38,7 @@ const CodeEditor: React.FC<{onChange?: Function, language?: string, useLanguageS
 			{
 				code: /('.*'|&#34;.*&#34;)/gm,
 				classes: 'c--orange',
-			}
+			},
 		],
 		js: [
 			{
@@ -69,6 +69,14 @@ const CodeEditor: React.FC<{onChange?: Function, language?: string, useLanguageS
 				code: /({|})/gm,
 				classes: 'c--white',
 			},
+			{
+				code: /(\/\*.*\*\/)/gm,
+				classes: 'c--gray',
+			},
+			{
+				code: /(\/\/[^\n]*)/gm,
+				classes: 'c--gray',
+			},
 		],
 		css: [
 			{
@@ -86,6 +94,10 @@ const CodeEditor: React.FC<{onChange?: Function, language?: string, useLanguageS
 			{
 				code: /({|}|:|;)/gm,
 				classes: 'c--white',
+			},
+			{
+				code: /(\/\*.*\*\/)/gm,
+				classes: 'c--gray',
 			},
 		],
 	};

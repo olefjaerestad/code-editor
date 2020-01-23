@@ -35,7 +35,7 @@ const test = (code: string, language: string, e: SyntheticEvent|undefined) => {
 }
 
 // @ts-ignore
-ReactDOM.render(<CodeEditor onChange={test} language="html" useLanguageSwitcher={false} value={localStorage.getItem('code')} />, document.getElementById('root'));
+ReactDOM.render(<CodeEditor onChange={test} language="js" useLanguageSwitcher={false} value={localStorage.getItem('code')} />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

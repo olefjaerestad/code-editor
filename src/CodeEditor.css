@@ -11,6 +11,7 @@
 	--color-yellow: hsl(64, 81%, 79%);
 	--color-white: hsl(0, 0%, 100%);
 	--color-white-transparent: hsla(0, 0%, 100%, .5);
+	--color-gray: hsl(0, 0%, 50%);
 	--color-background: hsl(228, 9%, 11%);
 	--height: 50vh;
 	--metaHeight: 30px;
@@ -113,6 +114,9 @@
 }
 .editor .c--cyan {
 	color: var(--color-cyan);
+}
+.editor .c--gray {
+	color: var(--color-gray);
 }
 .editor .c--green {
 	color: var(--color-green);
