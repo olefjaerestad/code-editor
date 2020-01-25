@@ -275,16 +275,16 @@ const CodeEditor: React.FC<{onChange?: Function, language?: string, useLanguageS
 	}
 
 	return (
-		<div className="editor">
-			<div className="editor__content">
-				<div className="editor__content__rows">
-					<div className="editor__content__rows__inner" ref={rowsEl}>
+		<div className="codeeditor">
+			<div className="codeeditor__content">
+				<div className="codeeditor__content__rows">
+					<div className="codeeditor__content__rows__inner" ref={rowsEl}>
 						{rowHeights.map((height: number, i: number) => <div key={i} style={{height: `${height}px`}}>{i+1}</div>)}
 					</div>
 				</div>
-				<div className="editor__content__main">
+				<div className="codeeditor__content__main">
 					<textarea
-					className="editor__content__main__writer" 
+					className="codeeditor__content__main__writer" 
 					placeholder={`${language} here...`}
 					spellCheck="false" 
 					ref={textArea}
@@ -296,23 +296,23 @@ const CodeEditor: React.FC<{onChange?: Function, language?: string, useLanguageS
 					onScroll={scrollHandler}></textarea>
 
 					<pre
-					className="editor__content__main__pretty"
+					className="codeeditor__content__main__pretty"
 					ref={prettycodeEl}
 					dangerouslySetInnerHTML={{__html: prettycode}}></pre>
 				</div>
-				<span ref={testLetter} className="editor__content__testletter">i</span>
+				<span ref={testLetter} className="codeeditor__content__testletter">i</span>
 			</div>
 
-			<div className="editor__meta">
+			<div className="codeeditor__meta">
 				<span>Row: {currentRow}</span>
 				<span>Col: {currentCol}</span>
 				{/* <span>{rowHeights.length} rows</span> */}
 				<span>Characters: {code.length}</span>
-				{useLanguageSwitcher && <select
+				{useLanguageSwitcher ? <select
 				value={language}
 				onChange={(e) => {setLanguage(e.target.value); prettifyCode(textArea.current?.value || '', e.target.value);}}>
 					{languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-				</select>}
+				</select> : <span>{language}</span>}
 			</div>
 		</div>
 	);
