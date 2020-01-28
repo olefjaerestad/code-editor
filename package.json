@@ -24,6 +24,12 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.3.0",
+    "rollup": "^1.27.13",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-css-only": "^2.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-peer-deps-external": "^2.2.0",
+    "rollup-plugin-typescript2": "^0.25.3",
     "typescript": "^3.7.4"
   },
   "eslintConfig": {
@@ -48,7 +54,8 @@
   ],
   "license": "MIT",
   "name": "@olefjaerestad/code-editor",
-  "main": "src/CodeEditor.tsx",
+  "main": "build/index.js",
+  "module": "build/index.es.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/olefjaerestad/code-editor.git"
@@ -57,7 +64,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "npm:build": "rollup -c"
   },
   "version": "1.0.2"
 }
